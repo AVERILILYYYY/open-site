@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Click to Open👀</title>
+  <style>
+    :root{
+      --bg1:#fff7f2;
+      --bg2:#f2fff8;
+      --accent:#2c8f57; /* green envelope accent */
+      --paper:#fffefc;
+      --text:#2b2b2b;
+    }
+
+    html,body{
+      height:100%;
+      margin:0;
+      font-family: "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background: linear-gradient(120deg,var(--bg1),var(--bg2));
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      overflow:hidden;
+    }
+
+    .stage{
+      width:92%;
+      max-width:1200px;
+      height:88vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      position:relative;
+      gap:32px;
+    }
+
+    /* Big envelope */
+    .envelope{
+      width:420px;
+      height:260px;
+      background:linear-gradient(180deg,#35a853,#2c8f57);
+      border-radius:14px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.18);
+      position:relative;
+      cursor:pointer;
+      transition: transform .28s ease;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      user-select:none;
+    }
+
+    .envelope:hover{ transform:translateY(-6px) scale(1.02); }
+
+    /* triangular flap */
+    .flap{
+      position:absolute;
+      top:10px;
+      left:50%;
+      transform:translateX(-50%);
+      width:0;
+      height:0;
+      border-left:210px solid transparent;
+      border-right:210px solid transparent;
+      border-bottom:110px solid #176b3a;
+      border-radius:6px;
+      transform-origin:top;
+      transition: transform .55s cubic-bezier(.2,.9,.25,1);
+      z-index:4;
+    }
+
+    /* small decorative stamp */
+    .stamp{
+      position:absolute;
+      right:18px;
+      top:18px;
+      width:62px;
+      height:46px;
+      background:linear-gradient(180deg,#fff,#ffeef6);
+      border-radius:6px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-weight:700;
+      color:#c84b8a;
+      box-shadow: inset 0 -3px 0 rgba(0,0,0,0.04);
+      z-index:6;
+    }
+
+    /* Paper letter inside */
+    .letter{
+      width:360px;
+      height:200px;
+      background:var(--paper);
+      border-radius:10px;
+      padding:18px 20px;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.12);
+      transform:translateY(12px) scale(.98);
+      z-index:2;
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+      overflow:auto;
+      opacity:0;
+      transition: opacity .35s ease, transform .35s ease;
+      color:var(--text);
+    }
+
+    .letter.visible{ opacity:1; transform:translateY(0) scale(1); }
+
+    .letter h1{
+      margin:0;
+      font-size:20px;
+      color:#b6337a;
+      letter-spacing:0.4px;
+    }
+
+    .letter .message{
+      white-space:pre-wrap;
+      font-size:15px;
+      line-height:1.48;
+      color:var(--text);
+      margin-top:6px;
+    }
+
+    .images{
+      display:flex;
+      gap:12px;
+      align-items:center;
+      justify-content:center;
+      margin-top:8px;
+      flex-wrap:wrap;
+    }
+
+    .images img{
+      width:120px;
+      height:120px;
+      object-fit:cover;
+      border-radius:12px;
+      box-shadow:0 6px 16px rgba(0,0,0,0.12);
+      border:4px solid rgba(255,255,255,0.7);
+    }
+
+    /* right-side panel: controls + tiny note */
+    .panel{
+      width:300px;
+      max-width:28%;
+      height:240px;
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+      align-items:center;
+      justify-content:flex-start;
+      padding:18px;
+      background:rgba(255,255,255,0.68);
+      border-radius:12px;
+      box-shadow:0 8px 30px rgba(0,0,0,0.08);
+      backdrop-filter: blur(6px);
+    }
+
+    .panel h3{ margin:0; color:#3b3b3b; font-size:18px; }
+    .music-btn{
+      margin-top:6px;
+      background:var(--accent);
+      color:white;
+      border:none;
+      padding:10px 14px;
+      border-radius:10px;
+      font-weight:600;
+      cursor:pointer;
+      box-shadow: 0 6px 18px rgba(44,143,87,0.18);
+    }
+
+    .hint{
+      font-size:13px;
+      color:#555;
+      text-align:center;
+      line-height:1.4;
+    }
+
+    /* confetti pieces (base style) */
+    .confetti{
+      position:fixed;
+      width:10px;
+      height:14px;
+      top:-20px;
+      opacity:0.95;
+      z-index:9999;
+      pointer-events:none;
+      transform-origin:center;
+      animation: fall linear forwards;
+    }
+
+    @keyframes fall{
+      to { transform: translateY(120vh) rotate(720deg); opacity:0.92; }
+    }
+
+    /* small responsive tweaks */
+    @media (max-width:900px){
+      .stage{ flex-direction:column; gap:18px; }
+      .panel{ width:92%; max-width:720px; }
+      .envelope{ width:86%; max-width:540px; height:220px; }
+      .letter{ width:86%; height:170px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="stage">
+    <div class="envelope" id="envelope" title="Click to open">
+      <div class="flap" id="flap"></div>
+      <div class="stamp">✨✨✨</div>
+
+      <!-- center paper is placed visually inside envelope -->
+      <div class="letter" id="letter" aria-hidden="true">
+        <h1>HII, IT'S YOUR EXISTENCE DAY!!!</h1>
+        <div class="message" id="message">
+Happiest birthday, Neil A.K.A lazysaurus!!!
+o(〃＾▽＾〃)o
+
+Our friendship started when I met you as "Vegaz," whom I treated as my younger brother in the RPW. 
+You're my first online friend at that time because I was just encouraged to join rpw by my sister.
+I'm glad she convinced me to join for if she hadn't, I wouldn't have met you. Honestly, you have
+this way of filling the quiet and empty spaces with your unique jokes and vibe in my boring life 
+during that time (that I get so excited whenever I see your profile pops up in my notifications.)
+
+Whenever I talk to you, I never feel like I am being judged, rather, I feel belong. You never made me
+feel like an outsider from the very beginning. You approached me and there I learned what having a genuine
+friend feels like—being included, understood, and valued. I don't know how you do it—you have this way where
+you make every conversation exciting and sometimes educational (which I am very thankful for, because I am 
+learning a lot from you ˃͈◡˂͈).
+
+Through this letter, I've finally expressed my appreciation towards you for being my comfort and happy place.
+You've taught me many things that I will carry and treasure forever. Among all of my friends, you're one of
+those people whom I trust the most. ILY, FAVORITE HOOMANNN! 💞💞💞💞
+        </div>
+
+        <div class="images" aria-hidden="true">
+          <img src="C:\Users\User\Downloads\bdaycat.jfif">
+          <img src="C:\Users\User\Downloads\whitecat.jfif">
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h3>Open the envelope</h3>
+      <p class="hint">Click the big green envelope to open the letter, play music, and celebrate with confetti 🎉</p>
+      <button id="music-toggle" class="music-btn" aria-pressed="false">🔊 Play music on open</button>
+      <p class="hint" style="font-weight:600; margin-top:6px;">Tip: Click again to pause music</p>
+    </div>
+  </div>
+
+  <!-- audio file (local path in same folder) -->
+  <audio id="bg-music" src="C:\Users\User\Downloads\HAPPY BIRTHDAY FROM THE CATS.mp3" loop></audio>
+
+  <script>
+    const envelope = document.getElementById('envelope');
+    const flap = document.getElementById('flap');
+    const letter = document.getElementById('letter');
+    const bgMusic = document.getElementById('bg-music');
+    const musicToggle = document.getElementById('music-toggle');
+
+    let opened = false;
+    let musicEnabled = true; // default: play on open (user can toggle)
+    musicToggle.addEventListener('click', e=>{
+      musicEnabled = !musicEnabled;
+      musicToggle.textContent = musicEnabled ? '🔊 Play music on open' : '🔈 Music muted on open';
+      musicToggle.setAttribute('aria-pressed', String(musicEnabled));
+    });
+
+    // When envelope is clicked: open flap, reveal letter, launch confetti and start music.
+    envelope.addEventListener('click', async () => {
+      if (!opened) {
+        // open animation
+        flap.style.transform = 'rotateX(180deg)';
+        // show letter after flap moves
+        setTimeout(()=> {
+          letter.classList.add('visible');
+          letter.setAttribute('aria-hidden','false');
+          launchConfetti(140);
+        }, 420);
+
+        // start music if enabled
+        if (musicEnabled) {
+          try {
+            await bgMusic.play();
+            musicToggle.textContent = '⏸ Pause music';
+          } catch (e) {
+            // play may fail if browser blocks it; button toggle exists so user can start manually
+            console.warn('Autoplay blocked; user interaction may be required to play audio.');
+          }
+        }
+        opened = true;
+      } else {
+        // if already opened, toggle music play/pause
+        if (!bgMusic.paused) {
+          bgMusic.pause();
+          musicToggle.textContent = '🔈 Music paused';
+        } else {
+          try {
+            await bgMusic.play();
+            musicToggle.textContent = '⏸ Pause music';
+          } catch(e){ console.warn('Play failed'); }
+        }
+      }
+    });
+
+    // small keyboard accessibility: press Enter when focused on envelope to open/toggle
+    envelope.tabIndex = 0;
+    envelope.addEventListener('keydown', (ev) => { if(ev.key === 'Enter' || ev.key === ' ') envelope.click(); });
+
+    // Confetti generator
+    function launchConfetti(amount=100){
+      const colors = ['#ff66b2','#66ff99','#66ccff','#ffff66','#ff9966','#c87aff','#4dd0e1'];
+      for(let i=0;i<amount;i++){
+        const el = document.createElement('div');
+        el.className = 'confetti';
+        el.style.left = Math.random()*100 + 'vw';
+        el.style.background = colors[Math.floor(Math.random()*colors.length)];
+        el.style.width = (6 + Math.random()*14) + 'px';
+        el.style.height = (8 + Math.random()*14) + 'px';
+        el.style.borderRadius = (Math.random()*50)+'%';
+        el.style.opacity = (0.8 + Math.random()*0.2);
+        const dur = (2.2 + Math.random()*2.5);
+        el.style.animationDuration = dur + 's';
+        el.style.transform = `rotate(${Math.random()*360}deg)`;
+        document.body.appendChild(el);
+        // cleanup
+        setTimeout(()=> el.remove(), Math.ceil(dur*1000) + 200);
+      }
+    }
+  </script>
+</body>
+</html>
